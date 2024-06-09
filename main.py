@@ -1,8 +1,10 @@
 from website import create_app, db
-from website.models import Book, User
+from website.models import User, Book
 from werkzeug.security import generate_password_hash
 import logging
 from flask import session
+from os import path
+
 # Create the Flask app
 app = create_app()
 
@@ -18,6 +20,13 @@ def log_session_info():
 @app.before_request
 def before_request():
     log_session_info()
+
+# Function to create the database if it doesn't exist
+def create_database():
+    with app.app_context():
+        if not path.exists('website/' + app.config['SQLALCHEMY_DATABASE_URI']):
+            db.create_all()
+            print('Created Database!')
 
 # Function to add books to the database
 def add_books():
@@ -50,9 +59,11 @@ def create_admin():
             db.session.add(admin)
             db.session.commit()
 
-# Call the function to add books and create admin user when the application starts
-if __name__ == '__main__':
-    add_books()
-    create_admin()
+# Call the functions to create the database, add books, and create admin user when the application starts
+create_database()
+add_books()
+create_admin()
 
+# Run the app
+if _name_ == '_main_':
     app.run(debug=True)
