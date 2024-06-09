@@ -11,7 +11,7 @@ DB_FOLDER = 'instance'  # Use Flask instance folder
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(_name_)
     app.config['SECRET_KEY'] = SECRET_KEY
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{path.join(app.instance_path, DB_NAME)}'
 
@@ -45,14 +45,4 @@ def create_app():
     def load_user(id):
         return User.query.get(int(id))
 
-    @app.before_first_request
-    def create_database():
-        db_path = path.join(app.instance_path, DB_NAME)
-        if not path.exists(db_path):
-            with app.app_context():
-                db.create_all()
-            print(f'Created Database at {db_path}!')
-        else:
-            print('Database already exists')
-
-    return app
+    return app
