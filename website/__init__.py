@@ -1,25 +1,30 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from os import path
+from os import path, makedirs
 from flask_login import LoginManager
-from flask_mail import Mail
-from .config import SECRET_KEY 
+from .config import SECRET_KEY
 
 # Initialize SQLAlchemy
 db = SQLAlchemy()
 DB_NAME = 'database.db'
+DB_FOLDER = 'instance'  # Use Flask instance folder
 
-#Initliazing the flask mail
-mail = Mail()
 
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = SECRET_KEY
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{path.join(app.instance_path, DB_NAME)}'
+
+   
+
     db.init_app(app)
-  
 
 
+    # Ensure the instance folder exists
+    try:
+        makedirs(app.instance_path, exist_ok=True)
+    except OSError as e:
+        print(f"Error creating instance folder: {e}")
 
     # Import blueprints
     from .views import views
@@ -42,9 +47,11 @@ def create_app():
 
     @app.before_first_request
     def create_database():
-        if not path.exists(DB_NAME):
-            db.create_all()
-            print('Created Database!')
+        db_path = path.join(app.instance_path, DB_NAME)
+        if not path.exists(db_path):
+            with app.app_context():
+                db.create_all()
+            print(f'Created Database at {db_path}!')
         else:
             print('Database already exists')
 
